@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>경력계산기</title>
+<style>
+:root{--ac:#6d4fc2;--ac-d:#4b3396;--ac-l:#f3effc;--ac-m:#cdbff0;--ink:#1f1d2b;--sub:#6b6880;--line:#e3e0ec;--warn:#c0392b;--warn-l:#fdecea;--ok:#2e7d4f;--gray:#c9c7d1}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:14px/1.5 "Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 24px 60px}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:3px solid var(--ac);padding-bottom:10px}
+header.top h1{margin:0;font-size:24px;letter-spacing:-.5px}
+header.top .ver{color:var(--sub);font-size:12px;text-align:right}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 6px;padding:10px 12px;background:#faf9fd;border:1px solid var(--line);border-radius:8px}
+.bar label{color:var(--sub);font-size:12px}
+.bar .sp{flex:1}
+.bar .saved{color:var(--sub);font-size:12px}
+select,input[type=text]{font:inherit;color:inherit;border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:#fff}
+input.in{background:var(--ac-l);border-color:var(--ac-m);width:100%}
+input.in:focus,select:focus{outline:2px solid var(--ac);outline-offset:-1px}
+button{font:inherit;border:1px solid var(--ac-m);background:#fff;color:var(--ac-d);border-radius:6px;padding:5px 10px;cursor:pointer}
+button:hover{background:var(--ac-l)}
+button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+button.pri:hover{background:var(--ac-d)}
+button.x{border:none;color:var(--sub);padding:2px 6px}
+nav.tabs{display:flex;gap:4px;margin-top:14px;border-bottom:1px solid var(--line)}
+nav.tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;padding:8px 16px;color:var(--sub);font-weight:600}
+nav.tabs button.on{color:var(--ac-d);border-bottom-color:var(--ac)}
+section.tab{display:none;padding-top:14px}
+section.tab.on{display:block}
+.lead{color:var(--sub);margin:0 0 12px}
+.sum{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:0;border-top:2px solid var(--ac);border-bottom:1px solid var(--line);margin-bottom:14px}
+.sum>div{padding:12px 16px;border-left:1px solid var(--line)}
+.sum>div:first-child{border-left:none}
+.sum .k{color:var(--sub);font-size:12px}
+.sum .big{font-size:28px;font-weight:700;color:var(--ac-d);letter-spacing:-.5px}
+.sum dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.sum dt{color:var(--sub);font-size:12px;align-self:center}
+.sum dd{margin:0;font-weight:600}
+.sum dd.w{color:var(--warn)}
+.hint{color:var(--sub);font-size:12.5px;margin:8px 0;white-space:pre-line}
+.msg{color:var(--warn);font-weight:600;min-height:1.5em}
+.ctl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:6px 0 10px}
+.ctl label{font-weight:600}
+.ctl input{width:150px}
+table{border-collapse:collapse;width:100%}
+th{font-size:12px;color:var(--sub);font-weight:600;text-align:left;border-bottom:2px solid var(--ac);padding:6px 6px;white-space:nowrap}
+td{border-bottom:1px solid var(--line);padding:4px 6px;vertical-align:middle}
+td.n,th.n{text-align:right;width:44px;font-variant-numeric:tabular-nums}
+td.no{color:var(--sub);width:34px;text-align:center}
+td.st{font-size:12.5px;white-space:nowrap}
+td.st.w,td.note.w{color:var(--warn);font-weight:600}
+td.st.ok{color:var(--ok)}
+td.st.ex{color:var(--ac-d);font-weight:600}
+td.note{font-size:12.5px;color:var(--sub)}
+.cols{display:grid;grid-template-columns:1fr;gap:22px}
+h2{font-size:15px;margin:22px 0 6px;padding-left:8px;border-left:4px solid var(--ac)}
+.band{overflow-x:auto;padding:4px 0 10px}
+.band .r{display:flex;align-items:center;gap:1px;margin-bottom:1px}
+.band .lb{flex:0 0 46px;font-size:11px;color:var(--sub);text-align:right;padding-right:6px}
+.band .c{flex:0 0 13px;height:13px;background:#f4f3f7;border-radius:2px}
+.band .r.tot .c{height:18px}
+.band .c.f{background:var(--ac)}
+.band .c.p{background:var(--ac-m)}
+.band .c.o{background:var(--warn)}
+.band .c.g{background:var(--gray)}
+.band .y{flex:0 0 27px;font-size:10px;color:var(--sub)}
+.legend{font-size:12px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.rules dt{font-weight:700;color:var(--ac-d);margin-top:14px}
+.rules dd{margin:2px 0 0;padding-bottom:12px;border-bottom:1px solid var(--line)}
+@media (max-width:820px){.sum{grid-template-columns:1fr}.sum>div{border-left:none;border-top:1px solid var(--line)}}
+@media print{
+ .bar,nav.tabs,button,.noprint{display:none!important}
+ .wrap{padding:0;max-width:none}
+ input.in{border:none;background:none;padding:0}
+ body{font-size:11.5px}
+ .pname{display:block!important}
+}
+.pname{display:none;font-weight:700;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+ <h1>경력계산기</h1>
+ <div class="ver">웹 ver. 20261124 · 대전서부교육지원청 반창모 · 오류 문의 042-530-1056</div>
+</header>
+
+<div class="bar">
+ <label for="who">대상자</label>
+ <select id="who"></select>
+ <input type="text" id="pname" placeholder="이름·메모" style="width:180px">
+ <button id="bNew" class="pri">새 대상자</button>
+ <button id="bDel">삭제</button>
+ <span class="sp"></span>
+ <span class="saved" id="saved"></span>
+ <button id="bCsv">표 CSV</button>
+ <button id="bSum">전체 요약 CSV</button>
+ <button id="bPrint">인쇄</button>
+ <button id="bExp">파일로 저장</button>
+ <button id="bImp">파일 불러오기</button>
+ <input type="file" id="file" accept=".json,application/json" hidden>
+</div>
+<div class="pname" id="printName"></div>
+
+<nav class="tabs">
+ <button data-t="calc" class="on">경력계산기</button>
+ <button data-t="card">인사기록카드</button>
+ <button data-t="rules">계산 규칙</button>
+</nav>
+
+<section class="tab on" id="t-calc">
+ <p class="lead">실제 근무한 구간만 입력하면 구간별 기간을 구해 더합니다. 휴직 기간은 입력하지 않습니다.</p>
+ <div class="sum">
+  <div><div class="k">총 경력</div><div class="big" id="cTotal"></div></div>
+  <div><dl><dt>년·월 (일수 버림)</dt><dd id="cFloor"></dd><dt>년·월 (15일↑ 올림)</dt><dd id="cRound"></dd></dl></div>
+  <div><dl><dt>계산된 구간</dt><dd id="cCount"></dd></dl></div>
+ </div>
+ <p class="hint">보라색 칸에 입력합니다.   날짜 입력 예)  2022-7-2  →  2022-07-02     ( 2022.7.2 · 2022/7/2 · 20220702 도 됩니다 )   엑셀에서 여러 칸을 복사해 붙여넣을 수 있습니다.</p>
+ <table id="calcTbl"><thead><tr><th>No</th><th>근무처 · 내용</th><th>시작일</th><th>종료일</th><th class="n">년</th><th class="n">월</th><th class="n">일</th><th>확인</th><th>비고 (윤년)</th><th class="noprint"></th></tr></thead><tbody></tbody></table>
+ <p class="noprint"><button id="cAdd">줄 추가</button> <button id="cClear">입력 모두 지우기</button></p>
+ <h2>경력 띠  -  한 칸이 한 학기 (3~8월, 9~2월)</h2>
+ <div class="band" id="cBand"></div>
+ <div class="legend"><span><i style="background:var(--ac)"></i>학기 내내 근무</span><span><i style="background:var(--ac-m)"></i>일부만 근무</span><span><i style="background:var(--warn)"></i>구간이 겹친 학기</span><span><i style="background:var(--gray)"></i>근무 구간이 없는 학기</span></div>
+</section>
+
+<section class="tab" id="t-card">
+ <p class="lead">카드 ‘경력’ 표를 그대로 붙이면 휴직 줄만 골라 빼고, 근무 구간을 만들어 더합니다. 전보·보직·복직 줄은 계산에 쓰지 않습니다.</p>
+ <div class="sum">
+  <div><div class="k">실 재직기간 (휴직 제외)</div><div class="big" id="kTotal"></div></div>
+  <div><dl><dt>총 재직 (휴직 포함·추가 구간 제외)</dt><dd id="kGross"></dd><dt>제외한 휴직</dt><dd id="kLeave"></dd><dt>확인 필요</dt><dd id="kWarn"></dd></dl></div>
+  <div><dl><dt>최초 임용일</dt><dd id="kFirst"></dd><dt>년·월 (일수 버림)</dt><dd id="kFloor"></dd><dt>년·월 (15일↑ 올림)</dt><dd id="kRound"></dd></dl></div>
+ </div>
+ <div class="ctl">
+  <label for="kBase">★ 기준일 (필수)</label><input class="in" id="kBase" type="text" placeholder="예) 2026-11-9">
+  <label for="kStart">시작일 (비우면 최초 임용일)</label><input class="in" id="kStart" type="text">
+ </div>
+ <div class="msg" id="kMsg"></div>
+ <p class="hint">① 카드 ‘경력’ 표의 내용 줄을 복사해 첫 ‘기간’ 칸에 붙여넣기     ② ★ 기준일 입력  예) 2026-11-9
+③ ‘자동 분류’ 확인 - 틀리면 ‘처리’ 칸에서 제외/포함 선택
+④ ★ 임용 전 경력(기간제교사 등) 포함 여부 확인 - 포함할 경우 아래 ‘추가 구간’에 입력</p>
+ <table id="cardTbl"><thead><tr><th>No</th><th>기간</th><th>임용구분</th><th>직급(직위)</th><th>부서</th><th>발령청</th><th>자동 분류</th><th>처리</th><th class="noprint"></th></tr></thead><tbody></tbody></table>
+ <p class="noprint"><button id="kAdd">줄 추가</button> <button id="kClear">경력 표 모두 지우기</button></p>
+
+ <h2>추가 구간</h2>
+ <p class="hint">★ 임용 전 경력(기간제교사 등) 포함 여부 확인 - 포함할 경우 아래에 직접 입력</p>
+ <table id="extraTbl"><thead><tr><th>No</th><th>시작일</th><th>종료일</th><th class="n">년</th><th class="n">월</th><th class="n">일</th><th>비고 (윤년)</th><th class="noprint"></th></tr></thead><tbody></tbody></table>
+ <p class="noprint"><button id="eAdd">줄 추가</button></p>
+
+ <h2>계산된 근무 구간</h2>
+ <table id="segTbl"><thead><tr><th>No</th><th>구분</th><th>시작일</th><th>종료일</th><th class="n">년</th><th class="n">월</th><th class="n">일</th></tr></thead><tbody></tbody></table>
+
+ <h2>경력 띠  -  한 칸이 한 학기 (3~8월, 9~2월)</h2>
+ <div class="band" id="kBand"></div>
+ <div class="legend"><span><i style="background:var(--ac)"></i>학기 내내 근무</span><span><i style="background:var(--ac-m)"></i>일부만 근무</span><span><i style="background:var(--warn)"></i>구간이 겹친 학기</span><span><i style="background:var(--gray)"></i>빼낸 휴직 기간</span></div>
+</section>
+
+<section class="tab" id="t-rules">
+ <dl class="rules">
+  <dt>합산</dt><dd>구간마다 나온 년·월·일을 각각 더합니다. 월을 더해 12월이 되면 1년으로 올립니다. 남은 일수는 구간마다 걸친 달이 달라 달력으로 이어 셀 수 없으므로, 더한 일수 30일을 1월로 올립니다.</dd>
+  <dt>실 재직기간</dt><dd>휴직을 뺀 근무 구간을 각각 입력해 더합니다. 총기간에서 휴직 합계를 빼는 방식이 아닙니다.</dd>
+  <dt>년·월 (일수 버림)</dt><dd>합산 결과에서 남은 일수를 버린 값입니다.</dd>
+  <dt>년·월 (15일↑ 올림)</dt><dd>합산 후 남은 일수가 15일 이상이면 1월로 올린 값입니다. 표창별 계획서에 다른 기준이 있으면 계획서를 따릅니다.</dd>
+  <dt>날짜 입력</dt><dd>연도는 4자리로 입력합니다. 예) 2022-7-2 → 2022-07-02. 2022.7.2, 2022/7/2, 20220702 도 됩니다. 연도를 두 자리로 넣거나 없는 날짜를 넣으면 ‘날짜 확인’으로 표시됩니다.</dd>
+  <dt>확인 칸</dt><dd>날짜 형식 오류, 종료일이 시작일보다 빠른 경우, 다른 구간과 날짜가 겹치는 경우를 표시합니다. 겹친 구간도 합계에는 그대로 더해지므로 표시가 뜨면 입력을 고쳐야 합니다.</dd>
+  <dt>비고 (윤년)</dt><dd>종료일이 윤년(2020·2024년 등)의 2월 28일이면 알려 줍니다. 그 해 2월 말일은 29일이라 말일을 잘못 넣었을 수 있습니다. 알림일 뿐 계산값은 바꾸지 않습니다. 실제 발령이 28일자면 그대로 둡니다.</dd>
+  <dt>인사기록카드</dt><dd>카드 경력 표를 붙이면 임용구분에 ‘휴직’이 든 줄(‘복직’ 제외)과 ‘○호:’로 적힌 줄(예: 10호:배우자국외동행)을 빼고, 시작일~기준일을 휴직 앞뒤로 잘라 근무 구간을 만듭니다. 전보·보직·복직 줄은 쓰지 않습니다. 정직·직위해제·퇴직 등은 자동으로 빼지 않고 ‘확인 필요’로만 표시하니 ‘처리’ 칸에서 직접 정합니다. 임용 전 경력은 카드 경력 표에 없으므로 추가 구간에 직접 넣습니다. 총 재직은 시작일~기준일의 카드 기간만 세며 추가 구간은 넣지 않습니다. 시작일을 직접 넣으면 그보다 앞선 추가 구간은 계산에서 빼고, 최초 임용일보다 앞선 시작일은 카드 구간에 쓰지 않습니다.</dd>
+  <dt>경력 띠</dt><dd>표 아래 그림입니다. 한 칸이 한 학기(3~8월, 9~2월)이고, 줄마다 그 구간이 걸친 학기가 칠해집니다. 맨 위 띠는 전체를 합친 것입니다. 진한 보라는 학기 내내 근무, 연한 보라는 일부만 근무, 빨강은 구간이 겹친 학기입니다. 회색은 첫 시작일과 마지막 종료일 사이에서 근무 구간이 없는 학기입니다. 경력계산기에서는 입력하지 않은 기간(휴직이거나 빠뜨린 구간)이고, 인사기록카드에서는 빼낸 휴직 기간입니다. 가장 이른 시작일부터 40년까지 그립니다. 계산값과는 무관한 확인용 그림입니다.</dd>
+  <dt>저장</dt><dd>입력한 내용은 이 컴퓨터의 이 브라우저에만 자동 저장되며 외부로 전송되지 않습니다. 브라우저 방문 기록·사이트 데이터를 지우면 함께 사라지므로, 보관하려면 ‘파일로 저장’으로 내려받아 두고 ‘파일 불러오기’로 다시 엽니다. 대상자별로 따로 저장됩니다.</dd>
+  <dt>오류·문의</dt><dd>계산 결과가 이상하면 대전서부교육지원청 유초등교육과 반창모(☎ 042-530-1056)에게 연락하십시오. 연락할 때 입력한 화면을 캡처해 보내 주시면 빨리 확인할 수 있습니다. 처음 들어 있는 홍길동 자료는 사용법을 보여 주는 가상 예시이니 지우고 입력하십시오.</dd>
+ </dl>
+</section>
+</div>
+
+<script id="core">
+/* ===== 계산 (엑셀 경력계산기 수식 이식) ===== */
+var CC=(function(){
+function D(y,m,d){return Math.round(Date.UTC(y,m-1,d)/864e5)}           // m, d 넘침 허용
+function ymd(n){var t=new Date(n*864e5);return [t.getUTCFullYear(),t.getUTCMonth()+1,t.getUTCDate()]}
+function dim(y,m){return ymd(D(y,m+1,0))[2]}
+function leap(y){return dim(y,2)===29}
+function iso(n){if(typeof n!=='number')return '';var a=ymd(n);return a[0]+'-'+('0'+a[1]).slice(-2)+'-'+('0'+a[2]).slice(-2)}
+// 반환: null(빈칸) | 'E'(오류) | 일련번호
+function parseDate(s){
+  if(s==null)return null;
+  s=String(s).trim().replace(/[./]/g,'-').replace(/\s/g,'');
+  if(s==='')return null;
+  if(s.slice(-1)==='-')s=s.slice(0,-1);
+  var y,m,d,x;
+  if(/^\d{8}$/.test(s)){y=+s.slice(0,4);m=+s.slice(4,6);d=+s.slice(6)}
+  else if((x=/^(\d+)-(\d+)-(\d+)$/.exec(s))){y=+x[1];m=+x[2];d=+x[3]}
+  else return 'E';
+  if(y<1900||y>2100||m<1||m>12||d<1||d>dim(y,m))return 'E';
+  return D(y,m,d);
+}
+// 한 구간의 년·월·일 (P 시작, U 종료, P<=U)
+function dur(P,U){
+  var p=ymd(P),u=ymd(U),py=p[0],pm=p[1],pd=p[2],uy=u[0],um=u[1],ud=u[2];
+  var dU=dim(uy,um),eom=(ud===dU),pdm1=ymd(P-1)[2];
+  var W=(pd===1&&eom)||(pd>1&&pdm1===ud)||(pd>1&&pdm1>dU&&eom);
+  var X=D(uy,pm,pd)>U;
+  var Y=um-pm+(X?12:0)+(W?1:0)-(pd>ud?1:0);
+  var Z;
+  if(pd>ud){var q=ymd(D(uy,um-1,1)),dp=dim(q[0],q[1]);Z=U-D(q[0],q[1],pd<=dp?pd:dp+1)}
+  else Z=U-D(uy,um,pd);
+  return {y:uy-py+(Y===12?1:0)-(X?1:0),m:Y===12?0:Y,d:W?0:(Z+1===30?29:Z+1)};
+}
+function sum(list){
+  var L=0,M=0,N=0;list.forEach(function(t){L+=t.d;M+=t.m;N+=t.y});
+  M+=Math.floor(L/30);N+=Math.floor(M/12);
+  return {y:N,m:M%12,d:L%30};
+}
+function fYMD(t){return t.y+'년 '+t.m+'월 '+t.d+'일'}
+function fFloor(t){return t.y+'년 '+t.m+'월'}
+function fRound(t){var k=t.y*12+t.m+(t.d>=15?1:0);return Math.floor(k/12)+'년 '+(k%12)+'월'}
+function leapFeb28(n){var a=ymd(n);return leap(a[0])&&a[1]===2&&a[2]===28}
+var isN=function(v){return typeof v==='number'};
+
+function computeCalc(rows){
+  var R=rows.map(function(r){
+    var P=parseDate(r.s),U=parseDate(r.e);
+    return {P:P,U:U,V:isN(P)&&isN(U)&&U>=P};
+  });
+  R.forEach(function(r){
+    r.chk='';r.note='';
+    if(r.P===null&&r.U===null)return;
+    if(r.P===null||r.U===null)r.chk='시작일·종료일 모두 입력';
+    else if(r.P==='E'||r.U==='E')r.chk='날짜 확인 (연도 4자리·없는 날짜)';
+    else if(r.U<r.P)r.chk='종료일이 시작일보다 빠름';
+    else{
+      var c=0;R.forEach(function(o){if(o.V&&o.P<=r.U&&o.U>=r.P)c++});
+      r.chk=c>1?'다른 구간과 겹침':'✓';
+    }
+    if(r.V){
+      r.t=dur(r.P,r.U);
+      if(leapFeb28(r.U))r.note='⚠ '+ymd(r.U)[0]+'년은 윤년 - 2월 말일은 29일';
+    }
+  });
+  var v=R.filter(function(r){return r.V});
+  return {rows:R,n:v.length,warn:R.filter(function(r){return r.chk&&r.chk!=='✓'}).length,
+          total:sum(v.map(function(r){return r.t})),segs:v.map(function(r,i){return {s:r.P,e:r.U}})};
+}
+
+function splitPeriod(s){
+  var T=String(s==null?'':s).replace(/[\s ]/g,'').replace(/[～∼〜]/g,'~');
+  var i=T.indexOf('~');
+  return i<0?[T,'']:[T.slice(0,i),T.slice(i+1)];
+}
+function computeCard(card){
+  var BN=parseDate(card.base),BS=parseDate(card.start);
+  var rows=card.rows.map(function(r){
+    var sp=splitPeriod(r.period),A=parseDate(sp[0]),F=parseDate(sp[1]),ty=r.type||'';
+    var o={A:A,F:F,empty:!String(r.period||'').trim()&&!ty.trim()};
+    o.leave=ty!==''&&ty.indexOf('복직')<0&&(ty.indexOf('휴직')>=0||/\d+\s*호\s*:/.test(ty));
+    o.chkType=/정직|직위해제|퇴직|면직|해임|파면/.test(ty);
+    o.bad=A==='E'||F==='E'||A===null||(isN(A)&&isN(F)&&F<A);
+    o.ex=(!isN(A)||F==='E')?false:(r.ov==='제외'?true:(r.ov==='포함'?false:o.leave));
+    var st='';
+    if(!o.empty){
+      if(o.bad)st='⚠ 기간 형식 확인';
+      else if(r.ov==='제외')st='제외 (직접 지정)';
+      else if(o.leave&&r.ov==='포함')st='휴직이지만 포함 (직접 지정)';
+      else if(o.leave)st=F===null?'휴직 → 제외 (종료일 없음)':(leapFeb28(F)?'⚠ 휴직 → 제외 (윤년: 2월 말일 29일)':'휴직 → 제외');
+      else if(o.chkType)st='⚠ 확인 필요';
+      else st=ty.indexOf('복직')>=0?'복직 표시':'근무·발령';
+    }
+    o.status=st;return o;
+  });
+  var starts=rows.filter(function(r){return isN(r.A)}).map(function(r){return r.A});
+  var first=starts.length?Math.min.apply(null,starts):null;
+  var CD=BS===null?first:(isN(BS)&&isN(first)?Math.max(BS,first):BS);
+  var ok=isN(BN)&&isN(CD)&&BN>=CD;
+  var leaves=rows.filter(function(r){return r.ex&&!r.bad}).map(function(r){
+    return {s:r.A,e:isN(r.F)?r.F:(isN(BN)?BN:r.A)}}).sort(function(a,b){return a.s-b.s});
+  var nLeave=rows.filter(function(r){return r.ex}).length;
+  var segs=[];
+  if(ok){
+    var cur=CD;
+    leaves.forEach(function(l){
+      var e=Math.min(l.s-1,BN);
+      if(e>=cur)segs.push({s:cur,e:e,kind:'카드'});
+      cur=Math.max(cur,l.e+1);
+    });
+    if(BN>=cur)segs.push({s:cur,e:BN,kind:'카드'});
+  }
+  var extra=card.extra.map(function(x){
+    var BD=parseDate(x.s),BI=parseDate(x.e),CT=BD,o={BD:BD,BI:BI,note:''};
+    if(isN(BD)&&isN(BS))CT=(isN(BI)&&BI<BS)?null:Math.max(BD,BS);
+    o.ok=isN(CT)&&isN(BI)&&BI>=CT;o.CT=CT;
+    if(!o.ok){
+      if(BD===null&&BI===null)o.note='';
+      else if(BD===null||BI===null)o.note='⚠ 시작일·종료일 모두 입력';
+      else if(BD==='E'||BI==='E')o.note='⚠ 날짜 확인 (연도 4자리·없는 날짜)';
+      else if(BI>=BD)o.note='시작일 이전 - 계산 제외';
+      else o.note='⚠ 종료일이 시작일보다 빠름';
+    }else{
+      o.t=dur(CT,BI);
+      if(leapFeb28(BI))o.note='⚠ '+ymd(BI)[0]+'년은 윤년 - 2월 말일은 29일';
+      else if(CT>BD)o.note='시작일부터 셈';
+      segs.push({s:CT,e:BI,kind:'추가'});
+    }
+    return o;
+  });
+  segs.forEach(function(s){s.t=dur(s.s,s.e)});
+  var msg='';
+  if(BN===null)msg='◀ 기준일을 먼저 입력하세요  예) 2026-11-9';
+  else if(BN==='E')msg='⚠ 기준일 날짜 확인 (연도 4자리·없는 날짜)';
+  else if(BS==='E')msg='⚠ 시작일 날짜 확인 (연도 4자리·없는 날짜)';
+  else if(isN(CD)&&BN<CD)msg='⚠ 기준일이 시작일보다 빠름';
+  else if(leapFeb28(BN))msg='⚠ 기준일이 윤년 2. 28.입니다 - '+ymd(BN)[0]+'년 2월 말일은 29일';
+  return {BN:BN,BS:BS,first:first,CD:CD,ok:ok,rows:rows,extra:extra,segs:segs,nLeave:nLeave,msg:msg,
+    warn:rows.filter(function(r){return r.status.charAt(0)==='⚠'}).length+extra.filter(function(x){return x.note.charAt(0)==='⚠'}).length,
+    total:sum(segs.map(function(s){return s.t})),gross:ok?dur(CD,BN):null};
+}
+// 경력 띠: 학기별 상태. 3 겹침, 2 내내, 1 일부, -1 빈 학기, 0 범위 밖
+function band(segs){
+  if(!segs.length)return null;
+  var mn=Math.min.apply(null,segs.map(function(s){return s.s})),mx=Math.max.apply(null,segs.map(function(s){return s.e}));
+  var a=ymd(mn),by=a[0]-(a[1]<3?1:0),cells=[],k;
+  for(k=0;k<80;k++){
+    var cs=D(by,3+6*k,1),ce=D(by,9+6*k,1);
+    if(cs>mx)break;
+    cells.push({s:cs,e:ce-1,len:ce-cs});
+  }
+  var rows=segs.map(function(g){return cells.map(function(c){return Math.max(0,Math.min(g.e,c.e)-Math.max(g.s,c.s)+1)})});
+  var tot=cells.map(function(c,i){
+    var t=0;rows.forEach(function(r){t+=r[i]});
+    return t>c.len?3:t===c.len?2:t>0?1:(c.s<=mx&&c.e+1>mn?-1:0);
+  });
+  return {by:by,cells:cells,rows:rows,tot:tot};
+}
+return {D:D,ymd:ymd,iso:iso,parseDate:parseDate,dur:dur,sum:sum,fYMD:fYMD,fFloor:fFloor,fRound:fRound,computeCalc:computeCalc,computeCard:computeCard,band:band};
+})();
+if(typeof module!=='undefined')module.exports=CC;
+</script>
+
+<script>
+(function(){
+var KEY='careerCalc.v1',$=function(id){return document.getElementById(id)};
+function el(tag,props){var e=document.createElement(tag),i;if(props)for(i in props){if(i==='cls')e.className=props[i];else if(i==='data')for(var k in props.data)e.dataset[k]=props.data[k];else e[i]=props[i]}
+  for(i=2;i<arguments.length;i++){var c=arguments[i];if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c)}return e}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function blankCalc(n){var a=[];for(var i=0;i<(n||10);i++)a.push({memo:'',s:'',e:''});return a}
+function blankRows(n){var a=[];for(var i=0;i<(n||12);i++)a.push({period:'',type:'',rank:'',dept:'',org:'',ov:''});return a}
+function blankExtra(n){var a=[];for(var i=0;i<(n||5);i++)a.push({s:'',e:''});return a}
+function newPerson(name){return {id:uid(),name:name||'새 대상자',calc:blankCalc(),card:{base:'',start:'',rows:blankRows(),extra:blankExtra()}}}
+function example(){
+  var p=newPerson('홍길동(예시)');
+  [['홍길동(예시)·활빈초 기간제','2009-09-01','2010-02-28'],['활빈초 교사 (신규 임용)','2010-03-01','2014-02-28'],['율도초 교사','2014-03-01','2016-08-31'],
+   ['율도초 (육아휴직 후 복직)','2017-09-01','2018-02-28'],['청운초 교사','2018-03-01','2022-02-28'],['해오름초 교사','2022-03-01','2024-08-31'],
+   ['해오름초 (질병휴직 후 복직)','2024-12-01','2026-11-18']].forEach(function(r,i){p.calc[i]={memo:r[0],s:r[1],e:r[2]}});
+  p.card.base='2026-11-18';
+  [['2010.03.01~2014.02.28','신규임용','교사','활빈초등학교','대전광역시교육청'],['2014.03.01~2016.08.31','전보','교사','율도초등학교','대전광역시서부교육지원청'],
+   ['2016.09.01~2017.08.31','육아휴직','교사','율도초등학교','대전광역시서부교육지원청'],['2017.09.01~2018.02.28','복직','교사','율도초등학교','대전광역시서부교육지원청'],
+   ['2018.03.01~2022.02.28','전보','교사','청운초등학교','대전광역시서부교육지원청'],['2022.03.01~2024.08.31','전보','교사','해오름초등학교','대전광역시서부교육지원청'],
+   ['2023.03.01~2024.02.29','보직','교사(연구부장)','해오름초등학교','해오름초등학교'],['2024.09.01~2024.11.30','질병휴직','교사','해오름초등학교','대전광역시서부교육지원청'],
+   ['2024.12.01~','복직','교사','해오름초등학교','대전광역시서부교육지원청']].forEach(function(r,i){p.card.rows[i]={period:r[0],type:r[1],rank:r[2],dept:r[3],org:r[4],ov:''}});
+  p.card.extra[0]={s:'2009-09-01',e:'2010-02-28'};
+  return p;
+}
+function fix(p){ // 불러온 자료 모양 보정
+  p.id=p.id||uid();p.name=String(p.name||'이름 없음');
+  p.calc=(Array.isArray(p.calc)?p.calc:[]).map(function(r){return {memo:String(r.memo||''),s:String(r.s||''),e:String(r.e||'')}});
+  var c=p.card||{};
+  p.card={base:String(c.base||''),start:String(c.start||''),
+    rows:(Array.isArray(c.rows)?c.rows:[]).map(function(r){return {period:String(r.period||''),type:String(r.type||''),rank:String(r.rank||''),dept:String(r.dept||''),org:String(r.org||''),ov:r.ov==='제외'||r.ov==='포함'?r.ov:''}}),
+    extra:(Array.isArray(c.extra)?c.extra:[]).map(function(r){return {s:String(r.s||''),e:String(r.e||'')}})};
+  if(!p.calc.length)p.calc=blankCalc();if(!p.card.rows.length)p.card.rows=blankRows();if(!p.card.extra.length)p.card.extra=blankExtra();
+  return p;
+}
+var S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.people)||!S.people.length){var ex=example();S={v:1,cur:ex.id,tab:'calc',people:[ex]}}
+S.people.forEach(fix);
+function P(){return S.people.filter(function(p){return p.id===S.cur})[0]||(S.cur=S.people[0].id,S.people[0])}
+var tmr;
+function save(){clearTimeout(tmr);tmr=setTimeout(function(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));var d=new Date();$('saved').textContent='이 브라우저에 저장됨 '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  catch(e){$('saved').textContent='⚠ 자동 저장 실패 - 파일로 저장하세요'}},250)}
+
+/* ---- 공통: 입력 칸, 붙여넣기 ---- */
+function inp(obj,key,grid,r,c,isDate,after){
+  var i=el('input',{type:'text',cls:'in',value:obj[key],data:{g:grid,r:r,c:c}});
+  i.addEventListener('input',function(){obj[key]=i.value;after();save()});
+  if(isDate)i.addEventListener('blur',function(){var n=CC.parseDate(i.value);if(typeof n==='number'){var t=CC.iso(n);if(t!==i.value){i.value=t;obj[key]=t;save()}}});
+  return i;
+}
+function parseTSV(text){
+  var rows=[],row=[],cell='',q=false,i,ch;text=text.replace(/\r\n?/g,'\n');
+  for(i=0;i<text.length;i++){ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch}
+    else if(ch==='"'&&cell==='')q=true;
+    else if(ch==='\t'){row.push(cell);cell=''}
+    else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=ch}
+  if(cell!==''||row.length){row.push(cell);rows.push(row)}
+  return rows.map(function(r){return r.map(function(c){return c.replace(/\n/g,' ').trim()})});
+}
+var GRID={
+  calc:{f:['memo','s','e'],arr:function(){return P().calc},blank:function(){return {memo:'',s:'',e:''}},draw:drawCalc},
+  card:{f:['period','type','rank','dept','org'],arr:function(){return P().card.rows},blank:function(){return {period:'',type:'',rank:'',dept:'',org:'',ov:''}},draw:drawCard},
+  extra:{f:['s','e'],arr:function(){return P().card.extra},blank:function(){return {s:'',e:''}},draw:drawCard}};
+document.addEventListener('paste',function(ev){
+  var t=ev.target;if(!t.dataset||!t.dataset.g)return;
+  var text=(ev.clipboardData||window.clipboardData).getData('text');
+  if(!/[\t\n]/.test(text.replace(/[\r\n]+$/,'')))return;
+  ev.preventDefault();
+  var G=GRID[t.dataset.g],r0=+t.dataset.r,c0=+t.dataset.c,arr=G.arr(),rows=parseTSV(text);
+  if(t.dataset.g==='card'&&c0===0)rows=rows.map(function(r){ // 탭 없이 붙은 줄(PDF 등)
+    if(r.length>1)return r;
+    var m=/^(\d{4}[.\-\/]\s?\d{1,2}[.\-\/]\s?\d{1,2}\.?\s*[~～∼〜]\s*(?:\d{4}[.\-\/]\s?\d{1,2}[.\-\/]\s?\d{1,2}\.?)?)\s+(.+)$/.exec(r[0]);
+    if(!m)return r;var w=m[2].split(/\s+/);return [m[1],w[0]||'',w[1]||'',w[2]||'',w.slice(3).join(' ')]});
+  rows=rows.filter(function(r){return r.some(function(c){return c!==''})});
+  rows.forEach(function(r,i){
+    while(arr.length<=r0+i)arr.push(G.blank());
+    r.forEach(function(v,j){var k=G.f[c0+j];if(!k)return;
+      if(k==='s'||k==='e'){var n=CC.parseDate(v);if(typeof n==='number')v=CC.iso(n)}
+      arr[r0+i][k]=v})});
+  G.draw();save();
+});
+
+/* ---- 경력 띠 ---- */
+function drawBand(box,segs,labels){
+  box.textContent='';var b=CC.band(segs);
+  if(!b){box.appendChild(el('div',{cls:'hint'},'구간을 입력하면 그려집니다.'));return}
+  var yr=el('div',{cls:'r'},el('span',{cls:'lb'}));
+  for(var k=0;k<b.cells.length;k+=2)yr.appendChild(el('span',{cls:'y'},String(b.by+k/2).slice(-2)));
+  box.appendChild(yr);
+  var tr=el('div',{cls:'r tot'},el('span',{cls:'lb'},'전체'));
+  b.tot.forEach(function(v,i){var c=el('span',{cls:'c'+(v===3?' o':v===2?' f':v===1?' p':v===-1?' g':'')});c.title=CC.iso(b.cells[i].s)+' ~ '+CC.iso(b.cells[i].e);tr.appendChild(c)});
+  box.appendChild(tr);
+  b.rows.forEach(function(r,j){var d=el('div',{cls:'r'},el('span',{cls:'lb'},labels[j]));
+    r.forEach(function(v,i){d.appendChild(el('span',{cls:'c'+(v>=b.cells[i].len?' f':v>0?' p':'')}))});box.appendChild(d)});
+}
+
+/* ---- 경력계산기 탭 ---- */
+var cOut=[];
+function drawCalc(){
+  var tb=$('calcTbl').tBodies[0],rows=P().calc;tb.textContent='';cOut=[];
+  rows.forEach(function(r,i){
+    var o={y:el('td',{cls:'n'}),m:el('td',{cls:'n'}),d:el('td',{cls:'n'}),chk:el('td',{cls:'st'}),note:el('td',{cls:'note'})};cOut.push(o);
+    var x=el('button',{cls:'x',title:'이 줄 삭제',textContent:'✕'});
+    x.onclick=function(){rows.splice(i,1);if(!rows.length)rows.push({memo:'',s:'',e:''});drawCalc();save()};
+    tb.appendChild(el('tr',null,el('td',{cls:'no'},String(i+1)),el('td',null,inp(r,'memo','calc',i,0,false,calcCalc)),
+      el('td',{style:'width:130px'},inp(r,'s','calc',i,1,true,calcCalc)),el('td',{style:'width:130px'},inp(r,'e','calc',i,2,true,calcCalc)),
+      o.y,o.m,o.d,o.chk,o.note,el('td',{cls:'noprint'},x)));
+  });
+  calcCalc();
+}
+function calcCalc(){
+  var R=CC.computeCalc(P().calc);
+  R.rows.forEach(function(r,i){var o=cOut[i];
+    o.y.textContent=r.V?r.t.y:'';o.m.textContent=r.V?r.t.m:'';o.d.textContent=r.V?r.t.d:'';
+    o.chk.textContent=r.chk;o.chk.className='st'+(r.chk==='✓'?' ok':r.chk?' w':'');
+    o.note.textContent=r.note;o.note.className='note'+(r.note?' w':'')});
+  $('cTotal').textContent=R.n?CC.fYMD(R.total):'구간을 입력하세요';
+  $('cFloor').textContent=R.n?CC.fFloor(R.total):'-';
+  $('cRound').textContent=R.n?CC.fRound(R.total):'-';
+  $('cCount').textContent=R.n+'개'+(R.warn?'  ·  확인 필요 '+R.warn+'건':'');$('cCount').className=R.warn?'w':'';
+  var lb=[];R.rows.forEach(function(r,i){if(r.V)lb.push(String(i+1))});
+  drawBand($('cBand'),R.segs,lb);
+}
+
+/* ---- 인사기록카드 탭 ---- */
+var kOut=[],eOut=[];
+function drawCard(){
+  var c=P().card,tb=$('cardTbl').tBodies[0];tb.textContent='';kOut=[];eOut=[];
+  $('kBase').value=c.base;$('kStart').value=c.start;
+  c.rows.forEach(function(r,i){
+    var st=el('td',{cls:'st'});kOut.push(st);
+    var sel=el('select',null,el('option',{value:''},'자동'),el('option',{value:'제외'},'제외'),el('option',{value:'포함'},'포함'));sel.value=r.ov;
+    sel.onchange=function(){r.ov=sel.value;calcCard();save()};
+    var x=el('button',{cls:'x',title:'이 줄 삭제',textContent:'✕'});
+    x.onclick=function(){c.rows.splice(i,1);if(!c.rows.length)c.rows.push(GRID.card.blank());drawCard();save()};
+    tb.appendChild(el('tr',null,el('td',{cls:'no'},String(i+1)),el('td',{style:'width:190px'},inp(r,'period','card',i,0,false,calcCard)),
+      el('td',{style:'width:150px'},inp(r,'type','card',i,1,false,calcCard)),el('td',null,inp(r,'rank','card',i,2,false,calcCard)),
+      el('td',null,inp(r,'dept','card',i,3,false,calcCard)),el('td',null,inp(r,'org','card',i,4,false,calcCard)),st,el('td',{style:'width:80px'},sel),el('td',{cls:'noprint'},x)));
+  });
+  var eb=$('extraTbl').tBodies[0];eb.textContent='';
+  c.extra.forEach(function(r,i){
+    var o={y:el('td',{cls:'n'}),m:el('td',{cls:'n'}),d:el('td',{cls:'n'}),note:el('td',{cls:'note'})};eOut.push(o);
+    var x=el('button',{cls:'x',title:'이 줄 삭제',textContent:'✕'});
+    x.onclick=function(){c.extra.splice(i,1);if(!c.extra.length)c.extra.push({s:'',e:''});drawCard();save()};
+    eb.appendChild(el('tr',null,el('td',{cls:'no'},'+'),el('td',{style:'width:150px'},inp(r,'s','extra',i,0,true,calcCard)),el('td',{style:'width:150px'},inp(r,'e','extra',i,1,true,calcCard)),o.y,o.m,o.d,o.note,el('td',{cls:'noprint'},x)));
+  });
+  calcCard();
+}
+function calcCard(){
+  var R=CC.computeCard(P().card),n=R.segs.length;
+  R.rows.forEach(function(r,i){var s=r.status,td=kOut[i];td.textContent=s;
+    td.className='st'+(s.charAt(0)==='⚠'?' w':s.indexOf('제외')>=0?' ex':s?' ok':'')});
+  R.extra.forEach(function(x,i){var o=eOut[i];o.y.textContent=x.ok?x.t.y:'';o.m.textContent=x.ok?x.t.m:'';o.d.textContent=x.ok?x.t.d:'';
+    o.note.textContent=x.note;o.note.className='note'+(x.note.charAt(0)==='⚠'?' w':'')});
+  $('kTotal').textContent=typeof R.BN!=='number'?'기준일을 입력하세요':(n?CC.fYMD(R.total):'경력 표를 붙여넣으세요');
+  $('kGross').textContent=R.gross?CC.fYMD(R.gross):'-';
+  $('kLeave').textContent=R.nLeave+'건';
+  $('kWarn').textContent=R.warn?R.warn+'건':'없음';$('kWarn').className=R.warn?'w':'';
+  $('kFirst').textContent=typeof R.first==='number'?CC.iso(R.first):'-';
+  $('kFloor').textContent=n?CC.fFloor(R.total):'-';$('kRound').textContent=n?CC.fRound(R.total):'-';
+  $('kMsg').textContent=R.msg;
+  var tb=$('segTbl').tBodies[0];tb.textContent='';
+  R.segs.forEach(function(s,i){tb.appendChild(el('tr',null,el('td',{cls:'no'},String(i+1)),el('td',null,s.kind==='추가'?'추가 구간':'카드 근무'),el('td',null,CC.iso(s.s)),el('td',null,CC.iso(s.e)),
+    el('td',{cls:'n'},String(s.t.y)),el('td',{cls:'n'},String(s.t.m)),el('td',{cls:'n'},String(s.t.d))))});
+  if(!n)tb.appendChild(el('tr',null,el('td',{colSpan:7,cls:'note'},'계산된 구간이 없습니다.')));
+  drawBand($('kBand'),R.segs,R.segs.map(function(s,i){return (s.kind==='추가'?'+':'')+(i+1)}));
+}
+['kBase','kStart'].forEach(function(id){var k=id==='kBase'?'base':'start',i=$(id);
+  i.addEventListener('input',function(){P().card[k]=i.value;calcCard();save()});
+  i.addEventListener('blur',function(){var n=CC.parseDate(i.value);if(typeof n==='number'){i.value=P().card[k]=CC.iso(n);save()}})});
+
+/* ---- 대상자·탭·파일 ---- */
+function drawWho(){var s=$('who');s.textContent='';S.people.forEach(function(p){s.appendChild(el('option',{value:p.id},p.name))});s.value=P().id;$('pname').value=P().name;$('printName').textContent='대상자: '+P().name}
+function drawAll(){drawWho();drawCalc();drawCard()}
+function tab(t){S.tab=t;document.querySelectorAll('nav.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t)});
+  document.querySelectorAll('section.tab').forEach(function(x){x.classList.toggle('on',x.id==='t-'+t)})}
+document.querySelectorAll('nav.tabs button').forEach(function(b){b.onclick=function(){tab(b.dataset.t);save()}});
+$('who').onchange=function(){S.cur=$('who').value;drawAll();save()};
+$('pname').addEventListener('input',function(){P().name=$('pname').value||'이름 없음';var o=$('who').selectedOptions[0];if(o)o.textContent=P().name;$('printName').textContent='대상자: '+P().name;save()});
+$('bNew').onclick=function(){var p=newPerson('새 대상자 '+(S.people.length+1));S.people.push(p);S.cur=p.id;drawAll();save();$('pname').focus();$('pname').select()};
+$('bDel').onclick=function(){if(!confirm('‘'+P().name+'’ 자료를 삭제합니다. 되돌릴 수 없습니다.'))return;
+  S.people=S.people.filter(function(p){return p.id!==S.cur});if(!S.people.length)S.people.push(newPerson());S.cur=S.people[0].id;drawAll();save()};
+$('cAdd').onclick=function(){for(var i=0;i<5;i++)P().calc.push({memo:'',s:'',e:''});drawCalc();save()};
+$('cClear').onclick=function(){if(confirm('경력계산기 입력을 모두 지웁니다.')){P().calc=blankCalc();drawCalc();save()}};
+$('kAdd').onclick=function(){for(var i=0;i<5;i++)P().card.rows.push(GRID.card.blank());drawCard();save()};
+$('kClear').onclick=function(){if(confirm('경력 표를 모두 지웁니다. 기준일과 추가 구간은 그대로 둡니다.')){P().card.rows=blankRows();drawCard();save()}};
+$('eAdd').onclick=function(){P().card.extra.push({s:'',e:''});drawCard();save()};
+$('bPrint').onclick=function(){window.print()};
+function download(name,text,type){var a=el('a',{href:URL.createObjectURL(new Blob([text],{type:type})),download:name});document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+function stamp(){var d=new Date();return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)}
+function csv(rows){return '﻿'+rows.map(function(r){return r.map(function(c){c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')}).join('\r\n')}
+$('bExp').onclick=function(){download('경력계산기_자료_'+stamp()+'.json',JSON.stringify({app:'경력계산기',v:1,people:S.people},null,1),'application/json')};
+$('bImp').onclick=function(){$('file').value='';$('file').click()};
+$('file').onchange=function(){var f=$('file').files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var j=JSON.parse(rd.result);if(!j||!Array.isArray(j.people)||!j.people.length)throw 0;
+      var ids={};S.people.forEach(function(p){ids[p.id]=1});
+      j.people.forEach(function(p){p=fix(p);if(ids[p.id])p.id=uid();S.people.push(p);S.cur=p.id});
+      drawAll();save();alert(j.people.length+'명의 자료를 불러와 목록에 더했습니다.')}
+    catch(e){alert('경력계산기에서 저장한 파일이 아닙니다.')}};rd.readAsText(f)};
+$('bCsv').onclick=function(){var p=P(),rows=[],R;
+  if(S.tab==='card'){R=CC.computeCard(p.card);
+    rows.push(['대상자',p.name],['기준일',p.card.base],['시작일',typeof R.CD==='number'?CC.iso(R.CD):''],[],['No','기간','임용구분','직급(직위)','부서','발령청','자동 분류','처리']);
+    p.card.rows.forEach(function(r,i){if(!R.rows[i].empty)rows.push([i+1,r.period,r.type,r.rank,r.dept,r.org,R.rows[i].status,r.ov])});
+    rows.push([],['No','구분','시작일','종료일','년','월','일']);
+    R.segs.forEach(function(s,i){rows.push([i+1,s.kind==='추가'?'추가 구간':'카드 근무',CC.iso(s.s),CC.iso(s.e),s.t.y,s.t.m,s.t.d])});
+    if(R.segs.length)rows.push([],['실 재직기간 (휴직 제외)',CC.fYMD(R.total)],['년·월 (일수 버림)',CC.fFloor(R.total)],['년·월 (15일↑ 올림)',CC.fRound(R.total)],['총 재직',R.gross?CC.fYMD(R.gross):''],['제외한 휴직',R.nLeave+'건']);
+  }else{R=CC.computeCalc(p.calc);
+    rows.push(['대상자',p.name],[],['No','근무처 · 내용','시작일','종료일','년','월','일','확인','비고 (윤년)']);
+    p.calc.forEach(function(r,i){var o=R.rows[i];if(o.P!==null||o.U!==null||r.memo)rows.push([i+1,r.memo,r.s,r.e,o.V?o.t.y:'',o.V?o.t.m:'',o.V?o.t.d:'',o.chk,o.note])});
+    if(R.n)rows.push([],['총 경력',CC.fYMD(R.total)],['년·월 (일수 버림)',CC.fFloor(R.total)],['년·월 (15일↑ 올림)',CC.fRound(R.total)]);}
+  download('경력계산기_'+p.name+'_'+stamp()+'.csv',csv(rows),'text/csv')};
+$('bSum').onclick=function(){var rows=[['대상자','[경력계산기] 총 경력','일수 버림','15일↑ 올림','확인 필요','[인사기록카드] 기준일','최초 임용일','실 재직기간','일수 버림','15일↑ 올림','총 재직','제외한 휴직','확인 필요']];
+  S.people.forEach(function(p){var a=CC.computeCalc(p.calc),b=CC.computeCard(p.card),n=b.segs.length;
+    rows.push([p.name,a.n?CC.fYMD(a.total):'',a.n?CC.fFloor(a.total):'',a.n?CC.fRound(a.total):'',a.warn||'',p.card.base,typeof b.first==='number'?CC.iso(b.first):'',
+      n?CC.fYMD(b.total):'',n?CC.fFloor(b.total):'',n?CC.fRound(b.total):'',b.gross?CC.fYMD(b.gross):'',n?b.nLeave+'건':'',b.warn||''])});
+  download('경력계산기_전체요약_'+stamp()+'.csv',csv(rows),'text/csv')};
+tab(S.tab==='card'||S.tab==='rules'?S.tab:'calc');drawAll();
+})();
+</script>
+</body>
+</html>
