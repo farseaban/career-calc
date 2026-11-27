@@ -106,12 +106,12 @@ h2{font-size:15px;margin:22px 0 6px;padding-left:8px;border-left:4px solid var(-
 <div class="pname" id="printName"></div>
 
 <nav class="tabs">
- <button data-t="calc" class="on">경력계산기</button>
- <button data-t="card">인사기록카드</button>
+ <button data-t="card" class="on">인사기록카드</button>
+ <button data-t="calc">경력계산기</button>
  <button data-t="rules">계산 규칙</button>
 </nav>
 
-<section class="tab on" id="t-calc">
+<section class="tab" id="t-calc">
  <p class="lead">실제 근무한 구간만 입력하면 구간별 기간을 구해 더합니다. 휴직 기간은 입력하지 않습니다.</p>
  <div class="sum">
   <div><div class="k">총 경력</div><div class="big" id="cTotal"></div></div>
@@ -126,7 +126,7 @@ h2{font-size:15px;margin:22px 0 6px;padding-left:8px;border-left:4px solid var(-
  <div class="legend"><span><i style="background:var(--ac)"></i>학기 내내 근무</span><span><i style="background:var(--ac-m)"></i>일부만 근무</span><span><i style="background:var(--warn)"></i>구간이 겹친 학기</span><span><i style="background:var(--gray)"></i>근무 구간이 없는 학기</span></div>
 </section>
 
-<section class="tab" id="t-card">
+<section class="tab on" id="t-card">
  <p class="lead">카드 ‘경력’ 표를 그대로 붙이면 휴직 줄만 골라 빼고, 근무 구간을 만들어 더합니다. 전보·보직·복직 줄은 계산에 쓰지 않습니다.</p>
  <div class="sum">
   <div><div class="k">실 재직기간 (휴직 제외)</div><div class="big" id="kTotal"></div></div>
@@ -382,7 +382,7 @@ function fix(p){ // 불러온 자료 모양 보정
 }
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!S||!Array.isArray(S.people)||!S.people.length){var ex=example();S={v:1,cur:ex.id,tab:'calc',people:[ex]}}
+if(!S||!Array.isArray(S.people)||!S.people.length){var ex=example();S={v:1,cur:ex.id,tab:'card',people:[ex]}}
 S.people.forEach(fix);
 function P(){return S.people.filter(function(p){return p.id===S.cur})[0]||(S.cur=S.people[0].id,S.people[0])}
 var tmr;
@@ -565,7 +565,7 @@ $('bSum').onclick=function(){var rows=[['대상자','[경력계산기] 총 경�
     rows.push([p.name,a.n?CC.fYMD(a.total):'',a.n?CC.fFloor(a.total):'',a.n?CC.fRound(a.total):'',a.warn||'',p.card.base,typeof b.first==='number'?CC.iso(b.first):'',
       n?CC.fYMD(b.total):'',n?CC.fFloor(b.total):'',n?CC.fRound(b.total):'',b.gross?CC.fYMD(b.gross):'',n?b.nLeave+'건':'',b.warn||''])});
   download('경력계산기_전체요약_'+stamp()+'.csv',csv(rows),'text/csv')};
-tab(S.tab==='card'||S.tab==='rules'?S.tab:'calc');drawAll();
+tab('card');drawAll();
 })();
 </script>
 </body>
